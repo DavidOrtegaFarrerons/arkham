@@ -3,6 +3,7 @@ package main
 import (
 	"arkham/internal/config"
 	"arkham/internal/git"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -14,12 +15,12 @@ var commitCmd = &cobra.Command{
 	Aliases: []string{"c"},
 	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg := config.Config{
-			BranchPattern:  "/a/b/c",
-			CommitTemplate: "test",
+		cfg, err := config.Load()
+		if errors.Is(err, config.ErrConfigFileNotFound) {
+			//Ask for info
 		}
-		git := git.New(&cfg)
-		git.Commit(args[0])
+		g := git.New(cfg)
+		g.Commit(args[0])
 		fmt.Println("Command executed successfully")
 		return nil
 	},

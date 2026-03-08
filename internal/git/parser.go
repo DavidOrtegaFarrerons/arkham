@@ -13,7 +13,7 @@ func (g *Git) Parse(branchName string) map[string]string {
 	indexes := templateRegex.FindAllStringSubmatchIndex(pattern, len(keys))
 
 	rgxp := ""
-	for i, _ := range keys {
+	for i := range keys {
 		name := keys[i][1]
 		separatorPosition := indexes[i][1]
 		if separatorPosition >= len(pattern) {
