@@ -4,7 +4,6 @@ import (
 	"arkham/internal/config"
 	"arkham/internal/git"
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -29,9 +28,7 @@ var commitCmd = &cobra.Command{
 			}
 		}
 		g := git.New(cfg)
-		fmt.Printf("%v", cfg)
 		g.Commit(args[0])
-		fmt.Println("Command executed successfully")
 		return nil
 	},
 }
