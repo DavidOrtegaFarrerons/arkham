@@ -15,6 +15,14 @@ var (
 	ErrConfigFileNotFound = errors.New("no config file found")
 )
 
+// Config contains BranchPattern and CommitTemplate
+// BranchPattern is the pattern of a branch
+// eg: for branch: feature/TASK-1_very-cool-branch
+// BranchPattern: {type}/{ticket}_{description}
+// and CommitTemplate would be a custom pattern that can use all wrapped names in {} in BranchPattern
+// eg: {type} ({ticket}): {description}
+// This would output: feature (TASK-1): very-cool-branch
+// A special pattern "{message}" is allowed, which is the message you input in the commit command
 type Config struct {
 	BranchPattern  string `json:"branch_pattern"`
 	CommitTemplate string `json:"commit_template"`
@@ -63,13 +71,15 @@ func Prompt() error {
 	}
 	branchPattern = strings.TrimSpace(branchPattern)
 	patterns := ExtractPlaceholders(branchPattern)
+	patternsMap := map[string]bool{}
 	for _, p := range patterns {
-		if p == "message" {
-			panic("message cannot be used as a placeholder")
-		}
+		patternsMap[p] = true
 	}
 
-	//Here I would like to show all the available patterns + "message"
+	if _, exists := patternsMap["message"]; exists {
+		panic("You cannot use a message variable")
+	}
+
 	fmt.Println("Add the commit template, you have the following vars available:")
 	fmt.Println(strings.Join(patterns, ", "))
 	commitTemplate, err := reader.ReadString('\n')
@@ -77,7 +87,12 @@ func Prompt() error {
 		return err
 	}
 	commitTemplate = strings.TrimSpace(commitTemplate)
-	//Check here if any pattern from commitTemplate does not exist from branchPattern and return an error
+	commitTemplatePlaceholders := ExtractPlaceholders(commitTemplate)
+	for _, templatePlaceholder := range commitTemplatePlaceholders {
+		if _, exists := patternsMap[templatePlaceholder]; !exists {
+			panic(fmt.Sprintf("%s does not exist as an option based on the branch pattern you wrote", templatePlaceholder))
+		}
+	}
 
 	cfg := &Config{
 		BranchPattern:  branchPattern,
