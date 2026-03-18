@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 )
 
 var (
@@ -56,18 +58,25 @@ func Prompt() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Add the branch pattern, eg: {type}/{ticket}_{description}")
 	branchPattern, err := reader.ReadString('\n')
-	//Here I would like to check if any pattern is "message" and return an error
 	if err != nil {
 		return err
+	}
+	branchPattern = strings.TrimSpace(branchPattern)
+	patterns := ExtractPlaceholders(branchPattern)
+	for _, p := range patterns {
+		if p == "message" {
+			panic("message cannot be used as a placeholder")
+		}
 	}
 
 	//Here I would like to show all the available patterns + "message"
 	fmt.Println("Add the commit template, you have the following vars available:")
-	fmt.Println()
+	fmt.Println(strings.Join(patterns, ", "))
 	commitTemplate, err := reader.ReadString('\n')
 	if err != nil {
 		return err
 	}
+	commitTemplate = strings.TrimSpace(commitTemplate)
 	//Check here if any pattern from commitTemplate does not exist from branchPattern and return an error
 
 	cfg := &Config{
@@ -91,4 +100,16 @@ func configPath() (string, error) {
 	}
 
 	return filepath.Join(appDir, "config.json"), nil
+}
+
+func ExtractPlaceholders(pattern string) []string {
+	templateRegex := regexp.MustCompile(`\{(\w+)}`)
+	keys := templateRegex.FindAllStringSubmatch(pattern, -1)
+
+	patterns := make([]string, len(keys))
+	for i, match := range keys {
+		patterns[i] = match[1]
+	}
+
+	return patterns
 }

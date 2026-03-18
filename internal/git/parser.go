@@ -1,20 +1,20 @@
 package git
 
 import (
+	"arkham/internal/config"
 	"fmt"
 	"regexp"
 )
 
+// Parse takes a branch
 func (g *Git) Parse(branchName string) map[string]string {
 	pattern := g.cfg.BranchPattern
 	templateRegex := regexp.MustCompile(`\{(\w+)}`)
-	keys := templateRegex.FindAllStringSubmatch(pattern, -1)
-
+	keys := config.ExtractPlaceholders(pattern)
 	indexes := templateRegex.FindAllStringSubmatchIndex(pattern, len(keys))
-
 	rgxp := ""
 	for i := range keys {
-		name := keys[i][1]
+		name := keys[i]
 		separatorPosition := indexes[i][1]
 		if separatorPosition >= len(pattern) {
 			rgxp += fmt.Sprintf("(?P<%s>.+)", name)
@@ -32,10 +32,8 @@ func (g *Git) Parse(branchName string) map[string]string {
 	values := finalRegex.FindAllStringSubmatch(branchName, -1)
 
 	result := make(map[string]string)
-
-	for i, _ := range keys {
-
-		result[keys[i][1]] = values[0][i+1]
+	for i := range keys {
+		result[keys[i]] = values[0][i+1]
 	}
 
 	return result

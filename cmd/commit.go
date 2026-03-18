@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"arkham/internal/config"
@@ -17,9 +17,19 @@ var commitCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if errors.Is(err, config.ErrConfigFileNotFound) {
-			//Ask for info
+			//ASK INFO
+			err := config.Prompt()
+			if err != nil {
+				panic(err)
+			}
+
+			cfg, err = config.Load()
+			if err != nil {
+				panic(err)
+			}
 		}
 		g := git.New(cfg)
+		fmt.Printf("%v", cfg)
 		g.Commit(args[0])
 		fmt.Println("Command executed successfully")
 		return nil

@@ -2,6 +2,7 @@ package git
 
 import (
 	"arkham/internal/config"
+	"os/exec"
 )
 
 type Git struct {
@@ -12,7 +13,9 @@ func New(cfg *config.Config) *Git {
 	return &Git{cfg: cfg}
 }
 func (g *Git) Commit(message string) {
-	placeholderValues := g.Parse("branch")
+	placeholderValues := g.Parse("feature/TASK-1_example_for_testing")
 	placeholderValues["message"] = message
-	g.Format(placeholderValues)
+	commitMsg := g.Format(placeholderValues)
+
+	exec.Command("git", "commit", "-m", commitMsg)
 }
